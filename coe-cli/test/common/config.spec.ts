@@ -6,6 +6,8 @@ describe('Config', () => {
     test('Environment value', async () => {
 
         // Arrange
+        const originalTemp = process.env.TEMP
+        process.env.TEMP = originalTemp || '/tmp'
         Config.data = { "temp": "{env:TEMP}" }
 
         // Act
@@ -13,6 +15,36 @@ describe('Config', () => {
 
         // Assert
         expect(Config.data.temp).toBe(process.env.TEMP)
+        process.env.TEMP = originalTemp
+    })
+
+    test('Missing environment allowed', async () => {
+
+        // Arrange
+        const originalMissing = process.env.MISSING_VAR
+        delete process.env.MISSING_VAR
+        Config.configSetup = false
+        Config.data = { "value": "{env:MISSING_VAR}", failOnMissingEnv: false }
+
+        // Act
+        await Config.init()
+
+        // Assert
+        expect(Config.data.value).toBe("")
+        if (originalMissing) process.env.MISSING_VAR = originalMissing
+    })
+
+    test('Missing environment throws', async () => {
+
+        // Arrange
+        const originalMissing = process.env.MISSING_VAR
+        delete process.env.MISSING_VAR
+        Config.configSetup = false
+        Config.data = { "value": "{env:MISSING_VAR}", failOnMissingEnv: true }
+
+        // Act/Assert
+        await expect(Config.init()).rejects.toThrow('Environment variable MISSING_VAR not found')
+        if (originalMissing) process.env.MISSING_VAR = originalMissing
     })
 
     test('Config replacement', async () => {
@@ -63,3 +95,4 @@ describe('Config', () => {
         expect(data.child.other).toBe("123")
     })
 })
+
