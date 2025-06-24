@@ -6,6 +6,7 @@ export class Config {
 
     static configSetup: boolean = false;
     static data: { [id: string]: any; } = {}
+    static failOnMissingEnv: boolean = false
 
     public static async init() {
         if (Config.configSetup) {
@@ -34,6 +35,8 @@ export class Config {
             await this.copyValue(devConfig, Config.data, devKeys[i])
           }
         }
+
+        Config.failOnMissingEnv = Config.data.failOnMissingEnv || false
 
         await this.replaceValues(Config.data)
    
@@ -85,8 +88,15 @@ export class Config {
           if (envRegexp.test(data[key])) {
             let match = envRegexp.exec(data[key]).groups
             let envValue = process.env[match["name"]]
-    
-            data[key] = data[key].replace("{env:" + match["name"] + "}", envValue)
+
+            if (envValue !== undefined) {
+              data[key] = data[key].replace("{env:" + match["name"] + "}", envValue)
+            } else {
+              if (Config.failOnMissingEnv) {
+                throw new Error(`Environment variable ${match["name"]} not found`)
+              }
+              data[key] = data[key].replace("{env:" + match["name"] + "}", "")
+            }
           }
         }
     

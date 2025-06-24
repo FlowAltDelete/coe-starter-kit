@@ -1,4 +1,5 @@
 {
     "pat": "",
-    "upgrade": false
+    "upgrade": false,
+    "failOnMissingEnv": false
 }

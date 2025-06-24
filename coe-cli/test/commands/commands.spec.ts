@@ -576,6 +576,8 @@ const expectFile = async (args: string[], name: string) : Promise<void> => {
     var commands = new CoeCliCommands(logger);
     let readFileName = ''
 
+    const path = require('path')
+
     commands.readFile = (path: PathLike | FileHandle, options: { encoding: BufferEncoding, flag?: OpenMode } | BufferEncoding) => {
        readFileName = <string>path
        return Promise.resolve('')
@@ -586,5 +588,7 @@ const expectFile = async (args: string[], name: string) : Promise<void> => {
     await commands.execute(args)
 
     // Assert
-    expect(readFileName.indexOf(name) >= 0).toBeTruthy()
+    const normalized = path.normalize(readFileName)
+    const expected = path.join(...name.split('\\'))
+    expect(normalized.indexOf(expected) >= 0).toBeTruthy()
 }
